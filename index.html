@@ -14,6 +14,7 @@
         background-color: #ffffff;
         color: #1a1a1a;
         margin: 0;
+        overflow-x: hidden;
       }
       .font-tomorrow {
         font-family: 'Tomorrow', sans-serif;
@@ -45,11 +46,27 @@
   }
 }
 </script>
-    <!-- Use Babel to handle TSX/JSX transpilation in the browser and bypass strict MIME checking -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script>
+      Babel.registerPreset('app-preset', {
+        presets: [
+          [Babel.availablePresets['typescript'], { allExtensions: true, isTSX: true }],
+          [Babel.availablePresets['react']]
+        ]
+      });
+    </script>
   </head>
   <body>
     <div id="root"></div>
-    <script type="text/babel" data-type="module" data-presets="typescript,react" src="./index.tsx"></script>
+    <!-- 
+      By removing data-type="module", we prevent the browser from using the native ES module loader,
+      which is what triggers the "Strict MIME type checking" error on GitHub Pages.
+      Babel will fetch the content of index.tsx via XHR/fetch, compile it, and execute it.
+    -->
+    <script 
+      type="text/babel" 
+      data-presets="app-preset" 
+      src="./index.tsx"
+    ></script>
   </body>
 </html>
