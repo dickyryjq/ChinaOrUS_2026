@@ -59,13 +59,15 @@
   <body>
     <div id="root"></div>
     <!-- 
-      By removing data-type="module", we prevent the browser from using the native ES module loader,
-      which is what triggers the "Strict MIME type checking" error on GitHub Pages.
-      Babel will fetch the content of index.tsx via XHR/fetch, compile it, and execute it.
+      1. type="text/babel" stops the browser from trying to load index.tsx natively (avoiding MIME error).
+      2. Babel fetches index.tsx via XHR/fetch (which works with application/octet-stream).
+      3. data-type="module" tells Babel to inject the final code as a <script type="module">.
+      4. This allows the 'import' statements inside index.tsx to work correctly.
     -->
     <script 
       type="text/babel" 
       data-presets="app-preset" 
+      data-type="module"
       src="./index.tsx"
     ></script>
   </body>
