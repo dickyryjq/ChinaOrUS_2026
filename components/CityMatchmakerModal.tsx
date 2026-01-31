@@ -45,21 +45,28 @@ const QUESTIONS: Question[] = [
 ];
 
 const getImageUrl = (id: string) => {
-  // Using direct Unsplash URLs which are more reliable than the proxy used previously
   return `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&q=80&w=1000`;
 };
 
 const CITY_IMAGES: Record<string, string> = {
-  "Shanghai": getImageUrl("1538670682-efcc34c3f914"),
-  "Beijing": getImageUrl("1508804185828-77fa4f6df4a2"),
-  "Chengdu": getImageUrl("1525498122345-0d6728591820"),
-  "Kunming": getImageUrl("1523978591478-c753949ff840"),
-  "Shenzhen": getImageUrl("1523311651478-43306bc809e2"),
-  "Hangzhou": getImageUrl("1541535650810-10d26f5c2abb"),
+  "Shanghai": getImageUrl("1474181483307-a45a995300d6"),
+  "Beijing": getImageUrl("1541435033-5c74288b9dd3"),
+  "Chengdu": getImageUrl("1544670259-22a088898b9e"),
+  "Kunming": getImageUrl("1598000547948-43890f845763"),
+  "Shenzhen": getImageUrl("1526040671297-3824b20755a7"),
+  "Hangzhou": getImageUrl("1523311651478-43306bc809e2"),
   "Qingdao": getImageUrl("1591543301389-c45e54625b0f"),
   "Xiamen": getImageUrl("1521404063617-cc9a9ddaa273"),
   "Guangzhou": getImageUrl("1518173946687-a4c81c78399e")
 };
+
+interface ResultData {
+  city: string;
+  imageUrl: string;
+  tagline: string;
+  desc: string;
+  roast: string;
+}
 
 const CityMatchmakerModal: React.FC<Props> = ({ isOpen, onClose }) => {
   const [step, setStep] = useState(1);
@@ -71,7 +78,7 @@ const CityMatchmakerModal: React.FC<Props> = ({ isOpen, onClose }) => {
   const handleSelect = (qId: number, value: Answer) => {
     setAnswers(prev => ({ ...prev, [qId]: value }));
     setTimeout(() => {
-        setStep(prev => Math.min(prev + 1, QUESTIONS.length + 1));
+        setStep(prev => prev + 1);
     }, 400);
   };
 
@@ -81,56 +88,39 @@ const CityMatchmakerModal: React.FC<Props> = ({ isOpen, onClose }) => {
     }
   };
 
-  const result = useMemo(() => {
-    if (!isFinished) return null;
-    
+  const result = useMemo((): ResultData => {
     const combo = Object.values(answers).join('');
-    const seed = combo.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-    const useFirstOption = seed % 2 === 0;
-
-    let city = "Guangzhou";
     
+    // Logic for matching
     if (combo.includes('A') && combo.includes('C') && combo.includes('E')) {
-      city = useFirstOption ? "Shanghai" : "Beijing";
       return {
-        city,
-        imageUrl: CITY_IMAGES[city],
+        city: "Shanghai",
+        imageUrl: CITY_IMAGES["Shanghai"],
         tagline: "The global elite.",
         desc: "You want the center of the universe.",
         roast: "You’ll fit in perfectly until you realize nobody speaks English at the local dumpling shop and your 'VPN' is your only personality trait."
       };
     }
     if (combo.includes('B') && combo.includes('D') && combo.includes('F')) {
-      city = useFirstOption ? "Chengdu" : "Kunming";
       return {
-        city,
-        imageUrl: CITY_IMAGES[city],
+        city: "Chengdu",
+        imageUrl: CITY_IMAGES["Chengdu"],
         tagline: "The chill specialist.",
         desc: "You found the loophole to a happy life.",
         roast: "Your ambition is low enough to survive here. Just remember: 'Relaxing' is a full-time job, and the spicy oil will claim your soul eventually."
       };
     }
-    if (combo.includes('A') && combo.includes('D') && combo.includes('E')) {
-      city = useFirstOption ? "Shenzhen" : "Hangzhou";
+    if (combo.includes('A') && combo.includes('E')) {
       return {
-        city,
-        imageUrl: CITY_IMAGES[city],
+        city: "Shenzhen",
+        imageUrl: CITY_IMAGES["Shenzhen"],
         tagline: "The tech pioneer.",
-        desc: "You want the future, but without the old-money snobbery.",
+        desc: "You want the future, now.",
         roast: "You'll be surrounded by drones and delivery bots. You won't have a soul, but your internet speed will be 10G."
       };
     }
-    if (combo.includes('B') && combo.includes('C') && combo.includes('F')) {
-      city = useFirstOption ? "Qingdao" : "Xiamen";
-      return {
-        city,
-        imageUrl: CITY_IMAGES[city],
-        tagline: "The beachside nomad.",
-        desc: "You want the convenience of T1 with the soul of a vacation.",
-        roast: "The closest you'll get to a 'global career' is teaching English to a wealthy kid on a yacht. Enjoy the breeze."
-      };
-    }
-
+    
+    // Default fallback
     return {
       city: "Guangzhou",
       imageUrl: CITY_IMAGES["Guangzhou"],
@@ -138,13 +128,13 @@ const CityMatchmakerModal: React.FC<Props> = ({ isOpen, onClose }) => {
       desc: "You just want to eat and exist in peace.",
       roast: "You're just here for the Dim Sum. We respect the hustle, or lack thereof."
     };
-  }, [isFinished, answers]);
+  }, [answers]);
 
   const readinessScore = useMemo(() => {
-    const combo = Object.values(answers).join('');
-    const seed = combo.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-    return 81 + (seed % 19);
-  }, [isFinished, answers]);
+    const seed = Object.values(answers).join('').length;
+    if (seed === 0) return 0;
+    return 84 + (seed % 15);
+  }, [answers]);
 
   const reset = () => {
     setStep(1);
@@ -154,18 +144,15 @@ const CityMatchmakerModal: React.FC<Props> = ({ isOpen, onClose }) => {
 
   const handleCopyLink = () => {
     const url = window.location.href;
-    const challengeText = `I'm ${readinessScore}% ready for ${result?.city}. I bet you wouldn't last 24 hours in China. Test your survival score and prove me wrong:`;
-    const fullText = (url.startsWith('http')) ? `${challengeText} ${url}` : challengeText;
-    
-    navigator.clipboard.writeText(fullText).then(() => {
+    const challengeText = `I'm ${readinessScore}% ready for ${result.city}. Test your survival score: ${url}`;
+    navigator.clipboard.writeText(challengeText).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    }).catch(err => {
-      console.error('Could not copy text: ', err);
     });
   };
 
-  const currentAnswer = answers[step];
+  // Guard against out of bounds access during transition
+  const currentQuestion = QUESTIONS[Math.min(step - 1, QUESTIONS.length - 1)];
 
   return (
     <AnimatePresence>
@@ -188,7 +175,6 @@ const CityMatchmakerModal: React.FC<Props> = ({ isOpen, onClose }) => {
               background: 'linear-gradient(135deg, #3b3a6e 0%, #443c68 30%, #b21e35 70%, #d90429 100%)'
             }}
           >
-            {/* Dismiss Button - Top Right */}
             <button 
               onClick={reset}
               className="absolute top-4 right-4 sm:top-6 sm:right-6 z-50 p-2 bg-white/10 hover:bg-white/20 text-white rounded-full backdrop-blur-sm transition-all active:scale-90"
@@ -196,7 +182,6 @@ const CityMatchmakerModal: React.FC<Props> = ({ isOpen, onClose }) => {
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
             </button>
 
-            {/* Header */}
             <div className={`px-6 md:px-16 text-center ${isFinished ? 'pt-4 md:pt-6 pb-0' : 'pt-8 md:pt-10 pb-2'}`}>
               <h2 className="font-tomorrow font-bold text-white text-xl sm:text-2xl md:text-5xl tracking-tight leading-tight">
                 {isFinished ? (
@@ -208,7 +193,7 @@ const CityMatchmakerModal: React.FC<Props> = ({ isOpen, onClose }) => {
                       transition={{ delay: 0.2 }}
                       className="text-3xl sm:text-4xl md:text-7xl block text-white tracking-tighter"
                     >
-                      {result?.city}
+                      {result.city}
                     </motion.span>
                   </>
                 ) : (
@@ -229,13 +214,13 @@ const CityMatchmakerModal: React.FC<Props> = ({ isOpen, onClose }) => {
                   >
                     <div>
                       <h4 className="text-lg sm:text-xl md:text-2xl font-tomorrow font-semibold text-white/60 leading-tight mb-4 sm:mb-8">
-                        {QUESTIONS[step - 1].title}
+                        {currentQuestion.title}
                       </h4>
                     </div>
 
                     <div className="grid gap-4 sm:gap-6">
-                      {QUESTIONS[step - 1].options.map((opt) => {
-                        const isSelected = currentAnswer === opt.value;
+                      {currentQuestion.options.map((opt) => {
+                        const isSelected = answers[step] === opt.value;
                         return (
                           <button
                             key={opt.value}
@@ -304,27 +289,19 @@ const CityMatchmakerModal: React.FC<Props> = ({ isOpen, onClose }) => {
                           WebkitClipPath: 'polygon(8% 0%, 100% 0%, 92% 100%, 0% 100%)'
                         }}
                       >
-                        {result?.imageUrl ? (
-                          <img 
-                            key={result.city}
-                            src={result.imageUrl} 
-                            alt={result.city}
-                            referrerPolicy="no-referrer"
-                            className="w-full h-full object-cover transition-all duration-1000 block"
-                            onLoad={(e) => (e.currentTarget.style.opacity = '1')}
-                            onError={(e) => {
-                              console.error("Image load failure:", result.imageUrl);
-                              e.currentTarget.style.display = 'none';
-                            }}
-                          />
-                        ) : null}
+                        <img 
+                          key={result.city}
+                          src={result.imageUrl} 
+                          alt={result.city}
+                          className="w-full h-full object-cover transition-opacity duration-700"
+                        />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent pointer-events-none z-20" />
                       </motion.div>
                     </div>
 
                     <div className="space-y-2 sm:space-y-4 pt-1 sm:pt-2">
                       <p className="text-sm sm:text-base md:text-xl font-tomorrow font-bold text-white/60">
-                        {result?.tagline} <span className="text-white">{result?.desc}</span>
+                        {result.tagline} <span className="text-white">{result.desc}</span>
                       </p>
                     </div>
 
@@ -341,7 +318,7 @@ const CityMatchmakerModal: React.FC<Props> = ({ isOpen, onClose }) => {
                       </div>
                       <h4 className="font-tomorrow font-semibold text-[#E60000] text-xs sm:text-sm md:text-base tracking-wide mb-2 sm:mb-3 uppercase italic">The real talk (roast)</h4>
                       <p className="text-base sm:text-xl md:text-2xl text-gray-100 leading-relaxed font-bold italic">
-                        "{result?.roast}"
+                        "{result.roast}"
                       </p>
                     </div>
 
