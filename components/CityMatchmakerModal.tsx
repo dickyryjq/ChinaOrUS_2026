@@ -91,7 +91,17 @@ const CityMatchmakerModal: React.FC<Props> = ({ isOpen, onClose }) => {
   const result = useMemo((): ResultData => {
     const combo = Object.values(answers).join('');
     
-    // Logic for matching
+    // Default fallback
+    const defaultResult: ResultData = {
+      city: "Guangzhou",
+      imageUrl: CITY_IMAGES["Guangzhou"],
+      tagline: "The culinary master.",
+      desc: "You just want to eat and exist in peace.",
+      roast: "You're just here for the Dim Sum. We respect the hustle, or lack thereof."
+    };
+
+    if (!isFinished) return defaultResult;
+    
     if (combo.includes('A') && combo.includes('C') && combo.includes('E')) {
       return {
         city: "Shanghai",
@@ -120,19 +130,13 @@ const CityMatchmakerModal: React.FC<Props> = ({ isOpen, onClose }) => {
       };
     }
     
-    // Default fallback
-    return {
-      city: "Guangzhou",
-      imageUrl: CITY_IMAGES["Guangzhou"],
-      tagline: "The culinary master.",
-      desc: "You just want to eat and exist in peace.",
-      roast: "You're just here for the Dim Sum. We respect the hustle, or lack thereof."
-    };
-  }, [answers]);
+    return defaultResult;
+  }, [answers, isFinished]);
 
   const readinessScore = useMemo(() => {
-    const seed = Object.values(answers).join('').length;
-    if (seed === 0) return 0;
+    const values = Object.values(answers);
+    if (values.length === 0) return 0;
+    const seed = values.join('').length;
     return 84 + (seed % 15);
   }, [answers]);
 
@@ -152,7 +156,8 @@ const CityMatchmakerModal: React.FC<Props> = ({ isOpen, onClose }) => {
   };
 
   // Guard against out of bounds access during transition
-  const currentQuestion = QUESTIONS[Math.min(step - 1, QUESTIONS.length - 1)];
+  const currentIdx = Math.max(0, Math.min(step - 1, QUESTIONS.length - 1));
+  const currentQuestion = QUESTIONS[currentIdx];
 
   return (
     <AnimatePresence>

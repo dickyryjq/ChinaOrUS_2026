@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
-import Counter from './components/Counter';
-import DecisionCardComponent from './components/DecisionCard';
-import CityMatchmakerModal from './components/CityMatchmakerModal';
-import InfoModal from './components/InfoModal';
-import { DecisionCard } from './types';
+import Counter from './components/Counter.tsx';
+import DecisionCardComponent from './components/DecisionCard.tsx';
+import CityMatchmakerModal from './components/CityMatchmakerModal.tsx';
+import InfoModal from './components/InfoModal.tsx';
+import { DecisionCard } from './types.ts';
 
 const BASE_COUNT = 1248;
 
@@ -62,7 +62,11 @@ const CARDS_DATA: DecisionCard[] = [
 
 const App: React.FC = () => {
   const [hasVoted, setHasVoted] = useState(() => {
-    return localStorage.getItem('china_voted') === 'true';
+    try {
+      return localStorage.getItem('china_voted') === 'true';
+    } catch {
+      return false;
+    }
   });
   const [peopleCount, setPeopleCount] = useState(hasVoted ? BASE_COUNT + 1 : BASE_COUNT);
   const [isBtnHovered, setIsBtnHovered] = useState(false);
@@ -85,7 +89,11 @@ const App: React.FC = () => {
   const handleCancelVote = () => {
     setPeopleCount(BASE_COUNT);
     setHasVoted(false);
-    localStorage.setItem('china_voted', 'false');
+    try {
+      localStorage.setItem('china_voted', 'false');
+    } catch (e) {
+      console.warn('LocalStorage not available');
+    }
   };
 
   const handleShare = () => {
@@ -95,7 +103,7 @@ const App: React.FC = () => {
       text: 'Check out this site helping people decide on moving to China!',
     };
 
-    if (url.startsWith('http://') || url.startsWith('https://')) {
+    if (url.startsWith('http')) {
       shareData.url = url;
     }
 
@@ -114,7 +122,11 @@ const App: React.FC = () => {
     setIsMatchmakerOpen(false);
     if (!hasVoted) {
         setHasVoted(true);
-        localStorage.setItem('china_voted', 'true');
+        try {
+          localStorage.setItem('china_voted', 'true');
+        } catch (e) {
+          console.warn('LocalStorage not available');
+        }
     }
   };
 
