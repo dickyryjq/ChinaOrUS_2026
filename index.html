@@ -21,7 +21,6 @@
       .diagonal-pattern {
         background-image: repeating-linear-gradient(45deg, #ddd, #ddd 1px, transparent 1px, transparent 10px);
       }
-      /* Hide scrollbar but keep functionality */
       .custom-scrollbar::-webkit-scrollbar {
         width: 4px;
       }
@@ -46,10 +45,11 @@
   }
 }
 </script>
+    <!-- Use Babel to handle TSX/JSX transpilation in the browser and bypass strict MIME checking -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   </head>
   <body>
     <div id="root"></div>
-    <!-- The missing piece: loading the entry point module -->
-    <script type="module" src="./index.tsx"></script>
+    <script type="text/babel" data-type="module" data-presets="typescript,react" src="./index.tsx"></script>
   </body>
 </html>

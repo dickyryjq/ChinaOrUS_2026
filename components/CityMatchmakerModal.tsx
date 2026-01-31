@@ -91,17 +91,7 @@ const CityMatchmakerModal: React.FC<Props> = ({ isOpen, onClose }) => {
   const result = useMemo((): ResultData => {
     const combo = Object.values(answers).join('');
     
-    // Default fallback
-    const defaultResult: ResultData = {
-      city: "Guangzhou",
-      imageUrl: CITY_IMAGES["Guangzhou"],
-      tagline: "The culinary master.",
-      desc: "You just want to eat and exist in peace.",
-      roast: "You're just here for the Dim Sum. We respect the hustle, or lack thereof."
-    };
-
-    if (!isFinished) return defaultResult;
-    
+    // Logic for matching
     if (combo.includes('A') && combo.includes('C') && combo.includes('E')) {
       return {
         city: "Shanghai",
@@ -130,8 +120,15 @@ const CityMatchmakerModal: React.FC<Props> = ({ isOpen, onClose }) => {
       };
     }
     
-    return defaultResult;
-  }, [answers, isFinished]);
+    // Default fallback
+    return {
+      city: "Guangzhou",
+      imageUrl: CITY_IMAGES["Guangzhou"],
+      tagline: "The culinary master.",
+      desc: "You just want to eat and exist in peace.",
+      roast: "You're just here for the Dim Sum. We respect the hustle, or lack thereof."
+    };
+  }, [answers]);
 
   const readinessScore = useMemo(() => {
     const values = Object.values(answers);
@@ -155,7 +152,7 @@ const CityMatchmakerModal: React.FC<Props> = ({ isOpen, onClose }) => {
     });
   };
 
-  // Guard against out of bounds access during transition
+  // Guard for rendering active question correctly during transition
   const currentIdx = Math.max(0, Math.min(step - 1, QUESTIONS.length - 1));
   const currentQuestion = QUESTIONS[currentIdx];
 
@@ -219,12 +216,12 @@ const CityMatchmakerModal: React.FC<Props> = ({ isOpen, onClose }) => {
                   >
                     <div>
                       <h4 className="text-lg sm:text-xl md:text-2xl font-tomorrow font-semibold text-white/60 leading-tight mb-4 sm:mb-8">
-                        {currentQuestion.title}
+                        {currentQuestion?.title || "Loading..."}
                       </h4>
                     </div>
 
                     <div className="grid gap-4 sm:gap-6">
-                      {currentQuestion.options.map((opt) => {
+                      {currentQuestion?.options.map((opt) => {
                         const isSelected = answers[step] === opt.value;
                         return (
                           <button
@@ -271,7 +268,7 @@ const CityMatchmakerModal: React.FC<Props> = ({ isOpen, onClose }) => {
                             <motion.div 
                               className="h-full bg-white" 
                               initial={{ width: 0 }}
-                              animate={{ width: `${(step / 3) * 100}%` }}
+                              animate={{ width: `${(Math.min(step, 3) / 3) * 100}%` }}
                             />
                           </div>
                         </div>
