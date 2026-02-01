@@ -201,9 +201,9 @@ const App: React.FC = () => {
               )}
               <button 
                 onClick={handleShare}
-                className="w-full md:w-auto whitespace-nowrap px-8 py-3 md:py-4 border-2 border-[#E60000] text-[#E60000] hover:bg-red-50 font-tomorrow font-bold rounded-full transition-all duration-300 active:scale-95 text-sm md:text-base"
+                className="w-full md:w-auto whitespace-nowrap px-8 py-3 md:py-4 border-2 border-[#E60000] text-[#E60000] hover:bg-red-50 font-tomorrow font-bold rounded-full transition-all duration-300 active:scale-95 text-sm md:text-base flex-shrink-0"
               >
-                Share the site
+                Share with friends
               </button>
             </div>
           </div>

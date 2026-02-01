@@ -170,24 +170,53 @@ const QUESTIONS = [
   { id: 3, title: "The Saturday vibe", options: [{ value: 'E', text: 'Futuristic megacity with neon lights.' }, { value: 'F', text: 'Mountains, lakes, and "tea-drinking" pace.' }] }
 ];
 
+const getFinalImageUrl = (id: string) => `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&q=80&w=1000`;
+
+const STABLE_CITY_IMAGES: Record<string, string> = {
+  "Shanghai": getFinalImageUrl("1538428494232-9c0d8a3ab403"),
+  "Beijing": getFinalImageUrl("1614555383820-941c466f1b52"),
+  "Chengdu": getFinalImageUrl("1723210670026-fee99db90289"),
+  "Kunming": getFinalImageUrl("1724458589661-a2f42eb58aca"),
+  "Shenzhen": getFinalImageUrl("1636821771168-d13e578a88ba"),
+  "Hangzhou": getFinalImageUrl("1664299326174-f73b66496733"),
+  "Qingdao": getFinalImageUrl("1721794525689-d2bd76190f1e"),
+  "Xiamen": getFinalImageUrl("1720249789878-832ca9256bf4"),
+  "Guangzhou": getFinalImageUrl("1636259584602-5a3c9c0d05ff")
+};
+
 const CityMatchmakerModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
   const [step, setStep] = useState(1);
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [copied, setCopied] = useState(false);
+  const [selectedOption, setSelectedOption] = useState<string | null>(null);
 
   const isFinished = step > QUESTIONS.length;
+  
   const result = useMemo(() => {
     const combo = Object.values(answers).join('');
-    if (combo.includes('A') && combo.includes('C')) return { city: "Shanghai", tagline: "The global elite.", desc: "Center of the universe.", roast: "Your VPN is your only personality trait.", imageUrl: "https://images.unsplash.com/photo-1474181483307-a45a995300d6?auto=format&fit=crop&q=80&w=1000" };
-    if (combo.includes('B') && combo.includes('D')) return { city: "Chengdu", tagline: "The chill specialist.", desc: "Loophole to a happy life.", roast: "Spicy oil will claim your soul eventually.", imageUrl: "https://images.unsplash.com/photo-1544670259-22a088898b9e?auto=format&fit=crop&q=80&w=1000" };
-    return { city: "Guangzhou", tagline: "The culinary master.", desc: "Eat and exist in peace.", roast: "You're just here for the Dim Sum.", imageUrl: "https://images.unsplash.com/photo-1518173946687-a4c81c78399e?auto=format&fit=crop&q=80&w=1000" };
+    if (combo.includes('A') && combo.includes('C')) return { city: "Shanghai", tagline: "The global elite.", desc: "Center of the universe.", roast: "Your VPN is your only personality trait.", imageUrl: STABLE_CITY_IMAGES["Shanghai"] };
+    if (combo.includes('B') && combo.includes('D')) return { city: "Chengdu", tagline: "The chill specialist.", desc: "Loophole to a happy life.", roast: "Spicy oil will claim your soul eventually.", imageUrl: STABLE_CITY_IMAGES["Chengdu"] };
+    if (combo.includes('A') && combo.includes('E')) return { city: "Shenzhen", tagline: "The tech pioneer.", desc: "Future is now.", roast: "Don't blink or you'll miss the next startup.", imageUrl: STABLE_CITY_IMAGES["Shenzhen"] };
+    if (combo.includes('A') && combo.includes('F')) return { city: "Beijing", tagline: "The historical titan.", desc: "Power and tradition.", roast: "Enjoy the politics with your smog-flavored air.", imageUrl: STABLE_CITY_IMAGES["Beijing"] };
+    return { city: "Guangzhou", tagline: "The culinary master.", desc: "Eat and exist in peace.", roast: "You're just here for the Dim Sum.", imageUrl: STABLE_CITY_IMAGES["Guangzhou"] };
   }, [answers]);
 
   const readinessScore = useMemo(() => 84 + (Object.values(answers).join('').length % 15), [answers]);
 
   const handleSelect = (qId: number, value: string) => {
+    setSelectedOption(value);
     setAnswers(prev => ({ ...prev, [qId]: value }));
-    setTimeout(() => setStep(prev => prev + 1), 400);
+    setTimeout(() => {
+      setStep(prev => prev + 1);
+      setSelectedOption(null);
+    }, 450);
+  };
+
+  const handleBack = () => {
+    if (step > 1) {
+      setStep(prev => prev - 1);
+      setSelectedOption(null); 
+    }
   };
 
   const handleCopyLink = () => {
@@ -197,34 +226,113 @@ const CityMatchmakerModal: React.FC<{ isOpen: boolean; onClose: () => void }> = 
 
   const reset = () => { setStep(1); setAnswers({}); onClose(); };
 
+  // Track selection for "Back" button persistence
+  const activeSelection = selectedOption || answers[step];
+
   return (
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-hidden">
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={reset} className="absolute inset-0 bg-[#0B0C10]/95 backdrop-blur-md" />
-          <motion.div initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 20 }} className="relative w-full max-w-5xl h-auto max-h-[98vh] rounded-[3rem] shadow-2xl overflow-hidden flex flex-col" style={{ background: 'linear-gradient(135deg, #3b3a6e 0%, #443c68 30%, #b21e35 70%, #d90429 100%)' }}>
+          <motion.div 
+            initial={{ scale: 0.9, opacity: 0, y: 20 }} 
+            animate={{ scale: 1, opacity: 1, y: 0 }} 
+            exit={{ scale: 0.9, opacity: 0, y: 20 }} 
+            className="relative w-full max-w-5xl h-auto max-h-[98vh] rounded-[3rem] shadow-2xl overflow-hidden flex flex-col pt-[52px] md:pt-[60px]" 
+            style={{ background: 'linear-gradient(135deg, #3b3a6e 0%, #443c68 30%, #b21e35 70%, #d90429 100%)' }}
+          >
             <button onClick={reset} className="absolute top-6 right-6 z-50 p-2 bg-white/10 hover:bg-white/20 text-white rounded-full backdrop-blur-sm transition-all"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
             <div className="px-6 md:px-16 text-center pt-8 pb-4">
               <h2 className="font-tomorrow font-bold text-white text-xl sm:text-2xl md:text-5xl">{isFinished ? `You should move to ${result.city}` : "Which city should you move to?"}</h2>
             </div>
+            
             <div className="flex-1 p-4 sm:p-8 md:p-16 pt-0 overflow-y-auto custom-scrollbar">
-              {!isFinished ? (
-                <div className="space-y-6 max-w-3xl mx-auto">
-                  <h4 className="text-lg md:text-2xl font-tomorrow text-white/60 mb-4">{QUESTIONS[step - 1]?.title}</h4>
-                  <div className="grid gap-4">
-                    {QUESTIONS[step - 1]?.options.map((opt) => (
-                      <button key={opt.value} onClick={() => handleSelect(step, opt.value)} className="p-6 rounded-[1.5rem] border-2 border-white/10 hover:border-white/30 text-white text-left text-base sm:text-xl font-medium transition-all">{opt.text}</button>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <div className="text-center space-y-4 max-w-4xl mx-auto">
-                  <div className="relative h-40 sm:h-72 w-full max-w-xl mx-auto rounded-[2rem] overflow-hidden shadow-2xl"><img src={result.imageUrl} className="w-full h-full object-cover" /></div>
-                  <div className="p-6 bg-white/10 rounded-[2rem] border border-white/10 backdrop-blur-sm"><span className="text-white/50 font-tomorrow">Readiness score</span><br/><span className="text-4xl md:text-6xl font-tomorrow font-bold text-white">{readinessScore}%</span></div>
-                  <div className="p-8 bg-[#0B0C10]/80 rounded-[2rem] border border-white/5 text-left"><h4 className="font-tomorrow text-[#E60000] uppercase italic">The real talk (roast)</h4><p className="text-lg md:text-2xl text-white font-bold italic">"{result.roast}"</p></div>
-                  <button onClick={handleCopyLink} className="w-full bg-white text-[#E60000] font-tomorrow font-bold py-5 rounded-[1.5rem] text-lg hover:bg-gray-100 transition-all">{copied ? "Link copied!" : "Share survival score"}</button>
-                </div>
-              )}
+              <AnimatePresence mode="wait">
+                {!isFinished ? (
+                  <motion.div
+                    key={step}
+                    initial={{ opacity: 0, x: 30, scale: 0.98 }}
+                    animate={{ opacity: 1, x: 0, scale: 1 }}
+                    exit={{ opacity: 0, x: -30, scale: 0.98 }}
+                    transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                    className="space-y-6 max-w-3xl mx-auto pt-4"
+                  >
+                    <h4 className="text-lg md:text-2xl font-tomorrow text-white/60 mb-8">{QUESTIONS[step - 1]?.title}</h4>
+                    <div className="grid gap-4">
+                      {QUESTIONS[step - 1]?.options.map((opt) => (
+                        <button 
+                          key={opt.value} 
+                          onClick={() => handleSelect(step, opt.value)} 
+                          className={`p-6 md:p-10 rounded-[1.5rem] md:rounded-[2rem] border-2 text-white text-left text-base sm:text-xl font-medium transition-all group relative overflow-hidden ${activeSelection === opt.value ? 'border-white bg-white/20' : 'border-white/10 hover:border-white/30 hover:bg-white/5'}`}
+                        >
+                          <motion.span className="relative z-10 block" animate={activeSelection === opt.value ? { scale: 1.02 } : { scale: 1 }}>{opt.text}</motion.span>
+                          {activeSelection === opt.value && (
+                            <motion.div layoutId="selection" className="absolute inset-0 bg-white/10 pointer-events-none" />
+                          )}
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="flex items-center justify-between pt-12">
+                      <div className="w-24">
+                        {step > 1 && (
+                          <button 
+                            onClick={handleBack}
+                            className="flex items-center gap-2 text-white/70 hover:text-white font-tomorrow font-bold transition-colors text-sm uppercase tracking-widest"
+                          >
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M19 12H5M5 12L12 19M5 12L12 5"/></svg>
+                            Back
+                          </button>
+                        )}
+                      </div>
+                      <div className="flex flex-col items-center flex-1">
+                        <span className="text-white font-tomorrow font-bold text-xs md:text-sm mb-4 uppercase tracking-[0.2em]">Step {step} of 3</span>
+                        <div className="w-48 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                          <motion.div 
+                            className="h-full bg-[#E60000]" 
+                            initial={false}
+                            animate={{ width: `${(step / 3) * 100}%` }}
+                            transition={{ type: "spring", stiffness: 100, damping: 20 }}
+                          />
+                        </div>
+                      </div>
+                      <div className="w-24" />
+                    </div>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-center space-y-6 max-w-4xl mx-auto"
+                  >
+                    <div className="relative h-48 sm:h-72 w-full max-w-xl mx-auto rounded-[2rem] overflow-hidden shadow-2xl">
+                      <img src={result.imageUrl} className="w-full h-full object-cover" alt={result.city} />
+                    </div>
+                    
+                    <div className="flex justify-center">
+                      <div className="w-[240px] p-6 bg-white/10 rounded-[2rem] border border-white/10 backdrop-blur-sm">
+                        <span className="text-white/50 font-tomorrow text-xs uppercase tracking-widest mb-1 block">Readiness score</span>
+                        <span className="text-4xl md:text-6xl font-tomorrow font-bold text-white leading-none">{readinessScore}%</span>
+                      </div>
+                    </div>
+
+                    <div className="p-8 bg-[#0B0C10]/80 rounded-[2rem] border border-white/5 text-left max-w-2xl mx-auto shadow-inner">
+                      <h4 className="font-tomorrow text-[#E60000] uppercase italic text-xs tracking-[0.2em] mb-3">The real talk (roast)</h4>
+                      <p className="text-lg md:text-2xl text-white font-bold italic leading-relaxed">"{result.roast}"</p>
+                    </div>
+
+                    <div className="max-w-md mx-auto pt-4">
+                      <button 
+                        onClick={handleCopyLink} 
+                        className="w-full bg-white text-[#E60000] font-tomorrow font-bold py-5 rounded-[1.5rem] text-lg hover:bg-gray-100 transition-all shadow-xl active:scale-95 flex items-center justify-center gap-3"
+                      >
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>
+                        {copied ? "Link copied!" : "Share with friends"}
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </motion.div>
         </div>
@@ -245,7 +353,7 @@ const CARDS_DATA: DecisionCard[] = [
   { id: '8', title: 'Social Credit vs. FICO', description: "Who's got your number?", imageUrl: 'https://images.unsplash.com/photo-1551288049-bbbda536639a?q=80&w=500&h=500&auto=format&fit=crop' }
 ];
 
-const App: React.FC = () => {
+const MainApp: React.FC = () => {
   const [hasVoted, setHasVoted] = useState(() => localStorage.getItem('china_voted') === 'true');
   const [peopleCount, setPeopleCount] = useState(hasVoted ? 1249 : 1248);
   const [isBtnHovered, setIsBtnHovered] = useState(false);
@@ -279,20 +387,20 @@ const App: React.FC = () => {
       <div className="max-w-4xl mx-auto -mt-20 md:-mt-32 px-6 relative z-20">
         <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="bg-white rounded-xl shadow-2xl p-6 md:p-12 text-center">
           <Counter target={peopleCount} />
-          <h2 className="mt-4 text-xl md:text-2xl font-tomorrow font-bold">people want to move to China</h2>
-          <div className="mt-8 flex flex-col md:flex-row gap-4 justify-center">
+          <h2 className="mt-4 text-xl md:text-2xl font-tomorrow font-bold text-gray-900">people want to move to China</h2>
+          <div className="mt-8 flex flex-col md:flex-row gap-4 justify-center items-center">
             {hasVoted ? (
-              <button onClick={() => { setHasVoted(false); setPeopleCount(1248); localStorage.setItem('china_voted', 'false'); }} className="w-full md:w-80 px-8 py-4 border-2 border-gray-300 text-gray-600 font-tomorrow font-bold rounded-full">Cancel my move</button>
+              <button onClick={() => { setHasVoted(false); setPeopleCount(1248); localStorage.setItem('china_voted', 'false'); }} className="w-full md:w-80 px-8 py-4 border-2 border-gray-300 text-gray-600 font-tomorrow font-bold rounded-full transition-all hover:bg-gray-50">Cancel my move</button>
             ) : (
-              <button onMouseEnter={() => setIsBtnHovered(true)} onMouseLeave={() => setIsBtnHovered(false)} onClick={handleCountMeIn} className="w-full md:w-80 px-8 py-4 bg-[#E60000] text-white font-tomorrow font-bold rounded-full shadow-lg shadow-red-500/20">{isBtnHovered ? "Start drinking warm water 🥰" : "I'm Becoming Chinese"}</button>
+              <button onMouseEnter={() => setIsBtnHovered(true)} onMouseLeave={() => setIsBtnHovered(false)} onClick={handleCountMeIn} className="w-full md:w-80 px-8 py-4 bg-[#E60000] text-white font-tomorrow font-bold rounded-full shadow-lg shadow-red-500/20 transition-all active:scale-95 whitespace-nowrap">{isBtnHovered ? "Start drinking warm water 🥰" : "I'm Becoming Chinese"}</button>
             )}
-            <button onClick={handleShare} className="w-full md:w-48 px-8 py-4 border-2 border-[#E60000] text-[#E60000] font-tomorrow font-bold rounded-full">Share</button>
+            <button onClick={handleShare} className="w-full md:w-auto px-8 py-4 border-2 border-[#E60000] text-[#E60000] font-tomorrow font-bold rounded-full transition-all hover:bg-red-50 whitespace-nowrap flex-shrink-0">Share with friends</button>
           </div>
         </motion.div>
       </div>
       <section className="bg-white py-12 md:py-32">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="mb-16"><h2 className="text-2xl md:text-5xl font-tomorrow font-bold uppercase">CONVINCE ME</h2><div className="mt-4 h-1.5 w-24 bg-[#E60000]" /></div>
+          <div className="mb-16"><h2 className="text-2xl md:text-5xl font-tomorrow font-bold uppercase text-gray-900">CONVINCE ME</h2><div className="mt-4 h-1.5 w-24 bg-[#E60000]" /></div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {CARDS_DATA.map((card, idx) => (
               <motion.div key={card.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.1 * idx }}>
@@ -312,5 +420,5 @@ const App: React.FC = () => {
 // --- Render ---
 const rootElement = document.getElementById('root');
 if (rootElement) {
-  ReactDOM.createRoot(rootElement).render(<App />);
+  ReactDOM.createRoot(rootElement).render(<MainApp />);
 }

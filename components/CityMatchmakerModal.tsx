@@ -48,16 +48,17 @@ const getImageUrl = (id: string) => {
   return `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&q=80&w=1000`;
 };
 
+// Verified stable IDs for Unsplash images as requested
 const CITY_IMAGES: Record<string, string> = {
-  "Shanghai": getImageUrl("1474181483307-a45a995300d6"),
-  "Beijing": getImageUrl("1541435033-5c74288b9dd3"),
-  "Chengdu": getImageUrl("1544670259-22a088898b9e"),
-  "Kunming": getImageUrl("1598000547948-43890f845763"),
-  "Shenzhen": getImageUrl("1526040671297-3824b20755a7"),
-  "Hangzhou": getImageUrl("1523311651478-43306bc809e2"),
-  "Qingdao": getImageUrl("1591543301389-c45e54625b0f"),
-  "Xiamen": getImageUrl("1521404063617-cc9a9ddaa273"),
-  "Guangzhou": getImageUrl("1518173946687-a4c81c78399e")
+  "Shanghai": getImageUrl("1538428494232-9c0d8a3ab403"), // Iconic Pearl Tower
+  "Beijing": getImageUrl("1614555383820-941c466f1b52"), // Great Wall / Forbidden Vibe
+  "Chengdu": getImageUrl("1723210670026-fee99db90289"), // Panda Base
+  "Kunming": getImageUrl("1724458589661-a2f42eb58aca"),
+  "Shenzhen": getImageUrl("1636821771168-d13e578a88ba"),
+  "Hangzhou": getImageUrl("1664299326174-f73b66496733"),
+  "Qingdao": getImageUrl("1721794525689-d2bd76190f1e"),
+  "Xiamen": getImageUrl("1720249789878-832ca9256bf4"),
+  "Guangzhou": getImageUrl("1636259584602-5a3c9c0d05ff") // Canton Tower
 };
 
 interface ResultData {
@@ -72,27 +73,30 @@ const CityMatchmakerModal: React.FC<Props> = ({ isOpen, onClose }) => {
   const [step, setStep] = useState(1);
   const [answers, setAnswers] = useState<Record<number, Answer>>({});
   const [copied, setCopied] = useState(false);
+  const [selectedOption, setSelectedOption] = useState<Answer | null>(null);
 
   const isFinished = step > QUESTIONS.length;
 
   const handleSelect = (qId: number, value: Answer) => {
+    setSelectedOption(value);
     setAnswers(prev => ({ ...prev, [qId]: value }));
     setTimeout(() => {
         setStep(prev => prev + 1);
+        setSelectedOption(null);
     }, 400);
   };
 
   const handleBack = () => {
     if (step > 1) {
       setStep(prev => prev - 1);
+      setSelectedOption(null);
     }
   };
 
   const result = useMemo((): ResultData => {
     const combo = Object.values(answers).join('');
     
-    // Logic for matching
-    if (combo.includes('A') && combo.includes('C') && combo.includes('E')) {
+    if (combo.includes('A') && combo.includes('C')) {
       return {
         city: "Shanghai",
         imageUrl: CITY_IMAGES["Shanghai"],
@@ -101,7 +105,7 @@ const CityMatchmakerModal: React.FC<Props> = ({ isOpen, onClose }) => {
         roast: "You’ll fit in perfectly until you realize nobody speaks English at the local dumpling shop and your 'VPN' is your only personality trait."
       };
     }
-    if (combo.includes('B') && combo.includes('D') && combo.includes('F')) {
+    if (combo.includes('B') && combo.includes('D')) {
       return {
         city: "Chengdu",
         imageUrl: CITY_IMAGES["Chengdu"],
@@ -115,12 +119,20 @@ const CityMatchmakerModal: React.FC<Props> = ({ isOpen, onClose }) => {
         city: "Shenzhen",
         imageUrl: CITY_IMAGES["Shenzhen"],
         tagline: "The tech pioneer.",
-        desc: "You want the future, now.",
-        roast: "You'll be surrounded by drones and delivery bots. You won't have a soul, but your internet speed will be 10G."
+        desc: "Living in the city of the future.",
+        roast: "Don't blink or you'll miss a new skyscraper rising. You're here for the hustle, just don't forget to eat something other than hardware parts."
+      };
+    }
+    if (combo.includes('A') && combo.includes('F')) {
+      return {
+        city: "Beijing",
+        imageUrl: CITY_IMAGES["Beijing"],
+        tagline: "The historical titan.",
+        desc: "Power, tradition, and prestige.",
+        roast: "Enjoy the politics with your smog-flavored air. You'll be breathing in history, literally."
       };
     }
     
-    // Default fallback
     return {
       city: "Guangzhou",
       imageUrl: CITY_IMAGES["Guangzhou"],
@@ -152,9 +164,9 @@ const CityMatchmakerModal: React.FC<Props> = ({ isOpen, onClose }) => {
     });
   };
 
-  // Guard for rendering active question correctly during transition
   const currentIdx = Math.max(0, Math.min(step - 1, QUESTIONS.length - 1));
   const currentQuestion = QUESTIONS[currentIdx];
+  const currentSelection = selectedOption || answers[step];
 
   return (
     <AnimatePresence>
@@ -172,7 +184,7 @@ const CityMatchmakerModal: React.FC<Props> = ({ isOpen, onClose }) => {
             initial={{ scale: 0.9, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.9, opacity: 0, y: 20 }}
-            className="relative w-full max-w-5xl h-auto max-h-[98vh] rounded-[2rem] sm:rounded-[3rem] shadow-2xl overflow-hidden flex flex-col"
+            className="relative w-full max-w-5xl h-auto max-h-[98vh] rounded-[2rem] sm:rounded-[3rem] shadow-2xl overflow-hidden flex flex-col pt-10 md:pt-[60px]"
             style={{
               background: 'linear-gradient(135deg, #3b3a6e 0%, #443c68 30%, #b21e35 70%, #d90429 100%)'
             }}
@@ -184,7 +196,7 @@ const CityMatchmakerModal: React.FC<Props> = ({ isOpen, onClose }) => {
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
             </button>
 
-            <div className={`px-6 md:px-16 text-center ${isFinished ? 'pt-4 md:pt-6 pb-0' : 'pt-8 md:pt-10 pb-2'}`}>
+            <div className={`px-6 md:px-16 text-center ${isFinished ? 'pt-4 md:pt-6 pb-0' : 'pt-[52px] md:pt-[60px] pb-2'}`}>
               <h2 className="font-tomorrow font-bold text-white text-xl sm:text-2xl md:text-5xl tracking-tight leading-tight">
                 {isFinished ? (
                   <>
@@ -222,7 +234,7 @@ const CityMatchmakerModal: React.FC<Props> = ({ isOpen, onClose }) => {
 
                     <div className="grid gap-4 sm:gap-6">
                       {currentQuestion?.options.map((opt) => {
-                        const isSelected = answers[step] === opt.value;
+                        const isSelected = currentSelection === opt.value;
                         return (
                           <button
                             key={opt.value}
@@ -330,7 +342,7 @@ const CityMatchmakerModal: React.FC<Props> = ({ isOpen, onClose }) => {
                         className="w-full bg-white text-[#E60000] font-tomorrow font-bold py-3 sm:py-5 rounded-[1.2rem] sm:rounded-[1.5rem] text-sm sm:text-base md:text-lg hover:bg-gray-100 transition-all shadow-2xl active:scale-[0.98] flex items-center justify-center gap-2 sm:gap-3"
                       >
                         <svg width="18" height="18" className="sm:w-[22px] sm:h-[22px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
-                        {copied ? "Link copied!" : "Share survival score"}
+                        {copied ? "Link copied!" : "Share with friends"}
                       </button>
                     </div>
                   </motion.div>
